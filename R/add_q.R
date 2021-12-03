@@ -7,6 +7,8 @@
 #' @param method String indicating method to be used for p-value
 #' adjustment. Methods from
 #' [stats::p.adjust] are accepted.  Default is `method = "fdr"`.
+#' Number of multiple comparison corrections specified with 'n = '.
+#' Default is n = length(p).
 #' @inheritParams tbl_regression
 #' @inheritParams add_global_p
 #' @author Esther Drill, Daniel D. Sjoberg
@@ -43,7 +45,7 @@
 #'
 #' \if{html}{\figure{add_q_ex2.png}{options: width=60\%}}
 
-add_q <- function(x, method = "fdr", pvalue_fun = NULL, quiet = NULL) {
+add_q <- function(x, method = "fdr", n = NULL, pvalue_fun = NULL, quiet = NULL) {
   updated_call_list <- c(x$call_list, list(add_q = match.call()))
   # setting defaults -----------------------------------------------------------
   quiet <- quiet %||% get_theme_element("pkgwide-lgl:quiet") %||% FALSE
@@ -78,13 +80,13 @@ add_q <- function(x, method = "fdr", pvalue_fun = NULL, quiet = NULL) {
 
   # perform multiple comparisons -----------------------------------------------
   expr_p.adjust <-
-    rlang::expr(stats::p.adjust(x$table_body$p.value, method = !!method)) %>%
+    rlang::expr(stats::p.adjust(x$table_body$p.value, method = !!method, n = !!n)) %>%
     deparse()
   if (quiet == FALSE) {
     rlang::inform(glue("add_q: Adjusting p-values with\n`{expr_p.adjust}`"))
   }
 
-  x$table_body$q.value <- x$table_body$p.value %>% stats::p.adjust(method = method)
+  x$table_body$q.value <- x$table_body$p.value %>% stats::p.adjust(method = method, n = n)
 
   # update table_styling -------------------------------------------------------
   # footnote text
